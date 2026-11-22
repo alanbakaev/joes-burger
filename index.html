@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>У Джо — Бургеры</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8;color:#222}
+header{background:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+.logo{font-size:23px;font-weight:bold;color:#00a5e5}
+button{border:0;padding:12px;border-radius:12px;cursor:pointer;font-weight:bold}
+.cart{background:#00a5e5;color:white}
+main{max-width:1000px;margin:auto;padding:20px}
+.hero{background:#dff5ff;padding:30px;border-radius:20px;margin-bottom:25px}
+.hero h1{font-size:36px;margin:0}
+.hero p{color:#555}
+.categories{display:flex;gap:8px;overflow:auto;margin-bottom:20px}
+.categories button{background:white;white-space:nowrap}
+.categories button.active{background:#222;color:white}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:white;border-radius:16px;overflow:hidden}
+.pic{background:#fff0d9;text-align:center;font-size:65px;padding:20px}
+.info{padding:12px}
+.info p{color:#777;font-size:13px}
+.price{font-weight:bold}
+.add{background:#e4f7ff;color:#0099d6;font-size:20px}
+#cart{background:white;padding:15px;border-radius:16px;margin-top:25px}
+input,select,textarea{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:10px}
+.order{background:#00a5e5;color:white;width:100%}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">🍔 У ДЖО</div>
+<button class="cart" onclick="document.getElementById('cart').scrollIntoView()">🛒 Корзина <span id="count">0</span></button>
+</header>
+
+<main>
+<section class="hero">
+<h1>Сочные бургеры 🍔</h1>
+<p>Вкус, который запоминается!</p>
+<button onclick="document.getElementById('menu').scrollIntoView()">Посмотреть меню</button>
+</section>
+
+<h2>Категории</h2>
+<div class="categories" id="categories"></div>
+
+<h2 id="menu">Наше меню</h2>
+<div class="grid" id="products"></div>
+
+<section id="cart">
+<h2>🛒 Корзина</h2>
+<div id="items">Корзина пуста</div>
+<h3>Итого: <span id="total">0</span> ₸</h3>
+
+<h3>Оформление заказа</h3>
+<input id="name" placeholder="Ваше имя">
+<input id="phone" placeholder="Телефон">
+<select id="delivery">
+<option>Доставка</option>
+<option>Самовывоз</option>
+</select>
+<textarea id="address" placeholder="Адрес доставки"></textarea>
+<button class="order" onclick="order()">Оформить заказ</button>
+</section>
+</main>
+
+<script>
+const menu=[
+{id:1,name:"Классический Джо",price:1800,emoji:"🍔",cat:"Бургеры"},
+{id:2,name:"Двойной чизбургер",price:2500,emoji:"🍔",cat:"Бургеры"},
+{id:3,name:"Бекон Бургер",price:2300,emoji:"🥓",cat:"Бургеры"},
+{id:4,name:"Острый Джо",price:2100,emoji:"🌶️",cat:"Бургеры"},
+{id:5,name:"Картошка фри",price:700,emoji:"🍟",cat:"Закуски"},
+{id:6,name:"Наггетсы",price:1000,emoji:"🍗",cat:"Закуски"},
+{id:7,name:"Кола",price:500,emoji:"🥤",cat:"Напитки"},
+{id:8,name:"Комбо Джо",price:2900,emoji:"🍔🍟",cat:"Комбо"}
+];
+let cart={};
+let category="Все";
+
+function categories(){
+let list=["Все","Бургеры","Комбо","Закуски","Напитки"];
+document.getElementById("categories").innerHTML=list.map(c=>
+`<button class="${category===c?'active':''}" onclick="category='${c}';categories();show()">${c}</button>`).join("");
+}
+function show(){
+let list=menu.filter(p=>category==="Все"||p.cat===category);
+document.getElementById("products").innerHTML=list.map(p=>
+`<div class="card">
+<div class="pic">${p.emoji}</div>
+<div class="info">
+<b>${p.name}</b>
+<p>Свежие ингредиенты и фирменный вкус</p>
+<span class="price">${p.price.toLocaleString()} ₸</span>
+<button class="add" onclick="add(${p.id})">+</button>
+</div></div>`).join("");
+}
+function add(id){cart[id]=(cart[id]||0)+1;update()}
+function change(id,n){cart[id]+=n;if(cart[id]<=0)delete cart[id];update()}
+function update(){
+let count=Object.values(cart).reduce((a,b)=>a+b,0);
+document.getElementById("count").textContent=count;
+let total=0;
+let html="";
+for(let id in cart){
+let p=menu.find(x=>x.id==id);
+total+=p.price*cart[id];
+html+=`<p>${p.emoji} ${p.name} × ${cart[id]} 
+<button onclick="change(${id},-1)">−</button>
+<button onclick="change(${id},1)">+</button></p>`;
+}
+document.getElementById("items").innerHTML=html||"Корзина пуста";
+document.getElementById("total").textContent=total.toLocaleString();
+}
+function order(){
+if(!Object.keys(cart).length){alert("Добавь товары в корзину!");return}
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let delivery=document.getElementById("delivery").value;
+let address=document.getElementById("address").value;
+if(!name||!phone){alert("Заполни имя и телефон");return}
+let text="🍔 ЗАКАЗ У ДЖО\\n\\n";
+for(let id in cart){
+let p=menu.find(x=>x.id==id);
+text+=p.name+" × "+cart[id]+"\\n";
+}
+text+="\\nИтого: "+document.getElementById("total").textContent+" ₸";
+text+="\\nИмя: "+name+"\\nТелефон: "+phone+"\\n"+delivery;
+if(address)text+="\\nАдрес: "+address;
+alert("Заказ сформирован! На следующем этапе подключим автоматическую отправку.");
+navigator.clipboard?.writeText(text);
+}
+categories();show();update();
+</script>
+</body>
+</html>
